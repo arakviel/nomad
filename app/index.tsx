@@ -1,6 +1,21 @@
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useState } from 'react';
+import {
+  FlatList,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  View,
+} from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 
-import { mockTrips, TripCard, type Trip } from '@/features/trips';
+import {
+  mockPlaces,
+  mockTrips,
+  PlaceChip,
+  TripCard,
+  type Place,
+  type Trip,
+} from '@/features/trips';
 import { useTheme, type ThemePreference } from '@/shared/theme';
 import { AppText, Button, Screen } from '@/shared/ui';
 
@@ -12,15 +27,87 @@ const PREFS: { id: ThemePreference; label: string }[] = [
 
 export default function HomeScreen() {
   const { colors, spacing, preference, setPreference, scheme } = useTheme();
+  const [trips, setTrips] = useState<Trip[]>(mockTrips);
+  const [places] = useState<Place[]>(mockPlaces);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const handleOpenTrip = (trip: Trip) => {
+  const handleOpenTrip = useCallback((trip: Trip) => {
     console.log('TODO: відкрити поїздку', trip.id, trip.title);
-  };
+  }, []);
 
-  const hasTrips = mockTrips.length > 0;
+  const handleOpenPlace = useCallback((place: Place) => {
+    console.log('TODO: відкрити місце', place.id, place.name);
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Mock pull-to-refresh: «мережа» ще не підключена — імітуємо затримку.
+    setTimeout(() => {
+      setTrips([...mockTrips]);
+      setRefreshing(false);
+    }, 900);
+  }, []);
+
+  const renderTrip = useCallback(
+    ({ item }: { item: Trip }) => (
+      <TripCard trip={item} onPress={handleOpenTrip} />
+    ),
+    [handleOpenTrip],
+  );
+
+  const keyExtractor = useCallback((item: Trip) => item.id, []);
+
+  // Шапка списку: місця + підпис секції. Чіпи теми лишаються в sticky header (як у статті 08).
+  const listHeader = (
+    <View style={{ gap: spacing.md, marginBottom: spacing.md }}>
+      {places.length > 0 ? (
+        <View style={{ gap: spacing.sm }}>
+          <AppText style={{ fontWeight: '600' }}>Останні місця</AppText>
+          <FlatList
+            horizontal
+            data={places}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <PlaceChip place={item} onPress={handleOpenPlace} />
+            )}
+            showsHorizontalScrollIndicator={false}
+            ItemSeparatorComponent={() => <View style={{ width: spacing.sm }} />}
+            contentContainerStyle={{ paddingVertical: 2 }}
+          />
+        </View>
+      ) : null}
+
+      <AppText style={{ fontWeight: '600' }}>Ваші поїздки</AppText>
+    </View>
+  );
+
+  const listEmpty = (
+    <View
+      style={[
+        styles.empty,
+        {
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xl,
+          gap: spacing.sm,
+        },
+      ]}
+    >
+      <AppText variant="subtitle" style={styles.emptyTitle}>
+        Поки немає поїздок
+      </AppText>
+      <AppText
+        variant="caption"
+        color={colors.textSecondary}
+        style={styles.emptyDesc}
+      >
+        Потягніть список униз, щоб «оновити», або натисніть «Нова поїздка».
+      </AppText>
+    </View>
+  );
 
   return (
     <Screen style={styles.screen}>
+      {/* Sticky header з 08: бренд + тема + чіпи — не скроляться зі списком */}
       <View
         style={[
           styles.header,
@@ -45,7 +132,9 @@ export default function HomeScreen() {
             fontWeight: '600',
           }}
         >
-          {hasTrips ? `${mockTrips.length} поїздки у списку` : 'Список порожній'}
+          {trips.length > 0
+            ? `${trips.length} поїздок · ${places.length} місць`
+            : 'Список порожній'}
         </AppText>
 
         <View style={[styles.themeRow, { gap: spacing.sm, marginTop: spacing.sm }]}>
@@ -79,47 +168,30 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {hasTrips ? (
-        <ScrollView
-          style={styles.list}
+      <View style={styles.listWrap}>
+        <FlashList
+          data={trips}
+          renderItem={renderTrip}
+          keyExtractor={keyExtractor}
+          ListHeaderComponent={listHeader}
+          ListEmptyComponent={listEmpty}
           contentContainerStyle={{
             paddingHorizontal: spacing.md,
             paddingTop: spacing.md,
             paddingBottom: spacing.md,
           }}
+          ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
           showsVerticalScrollIndicator={false}
-        >
-          <AppText style={{ marginBottom: spacing.sm, fontWeight: '600' }}>
-            Ваші поїздки
-          </AppText>
-          <View style={{ gap: spacing.md }}>
-            {mockTrips.map((trip) => (
-              <TripCard key={trip.id} trip={trip} onPress={handleOpenTrip} />
-            ))}
-          </View>
-        </ScrollView>
-      ) : (
-        <View
-          style={[
-            styles.empty,
-            {
-              paddingHorizontal: spacing.xl,
-              gap: spacing.sm,
-            },
-          ]}
-        >
-          <AppText variant="subtitle" style={styles.emptyTitle}>
-            Поки немає поїздок
-          </AppText>
-          <AppText
-            variant="caption"
-            color={colors.textSecondary}
-            style={styles.emptyDesc}
-          >
-            Створіть першу — і тут з’явиться стрічка з датами та обкладинками.
-          </AppText>
-        </View>
-      )}
+        />
+      </View>
 
       <View
         style={[
@@ -164,11 +236,10 @@ const styles = StyleSheet.create({
   themeChipText: {
     fontWeight: '600',
   },
-  list: {
+  listWrap: {
     flex: 1,
   },
   empty: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },

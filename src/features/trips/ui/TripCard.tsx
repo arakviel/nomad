@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Image, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import type { Trip } from '@/features/trips/model/types';
@@ -9,7 +10,7 @@ type TripCardProps = {
   onPress?: (trip: Trip) => void;
 };
 
-export function TripCard({ trip, onPress }: TripCardProps) {
+function TripCardComponent({ trip, onPress }: TripCardProps) {
   const { colors, spacing, radius } = useTheme();
 
   return (
@@ -42,6 +43,9 @@ export function TripCard({ trip, onPress }: TripCardProps) {
             {trip.dateLabel}
           </AppText>
         </View>
+        <AppText variant="caption" color={colors.primary} style={styles.region}>
+          {trip.region}
+        </AppText>
         <AppText
           numberOfLines={2}
           style={{ marginTop: spacing.xs, color: colors.textSecondary }}
@@ -57,6 +61,9 @@ export function TripCard({ trip, onPress }: TripCardProps) {
     </Pressable>
   );
 }
+
+/** memo: рядок списку не перемальовується, якщо props ті самі. */
+export const TripCard = memo(TripCardComponent);
 
 const styles = StyleSheet.create({
   card: {
@@ -92,6 +99,9 @@ const styles = StyleSheet.create({
   },
   dates: {
     flexShrink: 0,
+  },
+  region: {
+    fontWeight: '600',
   },
   footer: {
     alignItems: 'flex-start',

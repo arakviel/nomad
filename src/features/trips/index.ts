@@ -1,3 +1,5 @@
 export { mockTrips } from './model/mockTrips';
-export type { Trip } from './model/types';
+export { mockPlaces } from './model/mockPlaces';
+export type { Trip, Place } from './model/types';
 export { TripCard } from './ui/TripCard';
+export { PlaceChip } from './ui/PlaceChip';
