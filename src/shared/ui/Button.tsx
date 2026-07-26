@@ -1,17 +1,55 @@
 import { Pressable, StyleSheet, Text, ViewStyle } from 'react-native';
-import { tokens } from '@/shared/theme';
-type ButtonProps = { label: string; onPress: () => void; disabled?: boolean; style?: ViewStyle };
+
+import { useTheme } from '@/shared/theme';
+
+type ButtonProps = {
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  style?: ViewStyle;
+};
+
 export function Button({ label, onPress, disabled = false, style }: ButtonProps) {
+  const { colors, spacing, radius, fontSize } = useTheme();
+
   return (
-    <Pressable accessibilityRole="button" disabled={disabled} onPress={onPress}
-      style={({ pressed }) => [styles.base, pressed && !disabled ? styles.pressed : null, disabled ? styles.disabled : null, style]}>
-      <Text style={styles.label}>{label}</Text>
+    <Pressable
+      accessibilityRole="button"
+      disabled={disabled}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.base,
+        {
+          backgroundColor: colors.primary,
+          paddingVertical: spacing.sm + 4,
+          paddingHorizontal: spacing.md,
+          borderRadius: radius.md,
+        },
+        pressed && !disabled ? { backgroundColor: colors.primaryPressed } : null,
+        disabled ? styles.disabled : null,
+        style,
+      ]}
+    >
+      <Text
+        style={[
+          styles.label,
+          { color: colors.onPrimary, fontSize: fontSize.md },
+        ]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
+
 const styles = StyleSheet.create({
-  base: { backgroundColor: tokens.colors.primary, paddingVertical: tokens.spacing.sm + 4, paddingHorizontal: tokens.spacing.md, borderRadius: tokens.radius.md, alignItems: 'center' },
-  pressed: { backgroundColor: tokens.colors.primaryPressed },
-  disabled: { opacity: 0.5 },
-  label: { color: tokens.colors.onPrimary, fontSize: tokens.fontSize.md, fontWeight: '600' },
+  base: {
+    alignItems: 'center',
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  label: {
+    fontWeight: '600',
+  },
 });
