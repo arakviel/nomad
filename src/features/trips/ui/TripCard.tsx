@@ -9,8 +9,10 @@ export function TripCard({ trip, onPress }: TripCardProps) {
       onPress={() => onPress?.(trip)} style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
       <Image source={{ uri: trip.coverUri }} style={styles.cover} resizeMode="cover" accessibilityIgnoresInvertColors />
       <View style={styles.body}>
-        <AppText variant="subtitle" numberOfLines={1}>{trip.title}</AppText>
-        <AppText variant="caption" style={styles.dates}>{trip.dateLabel}</AppText>
+        <View style={styles.titleRow}>
+          <AppText variant="subtitle" numberOfLines={1} style={styles.titleFlex}>{trip.title}</AppText>
+          <AppText variant="caption" style={styles.dates}>{trip.dateLabel}</AppText>
+        </View>
         <AppText numberOfLines={2} style={styles.description}>{trip.description}</AppText>
         <View style={styles.footer}><AppText variant="caption" color={tokens.colors.primary}>Відкрити</AppText></View>
       </View>
@@ -18,12 +20,14 @@ export function TripCard({ trip, onPress }: TripCardProps) {
   );
 }
 const styles = StyleSheet.create({
-  card: { backgroundColor: tokens.colors.surface, borderRadius: tokens.radius.lg, borderWidth: 1, borderColor: tokens.colors.border, overflow: 'hidden', marginBottom: tokens.spacing.md,
+  card: { backgroundColor: tokens.colors.surface, borderRadius: tokens.radius.lg, borderWidth: 1, borderColor: tokens.colors.border, overflow: 'hidden',
     ...Platform.select({ ios: { shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } }, android: { elevation: 3 }, default: {} }) },
   cardPressed: { opacity: 0.92 },
   cover: { width: '100%', height: 160, backgroundColor: tokens.colors.border },
   body: { padding: tokens.spacing.md, gap: tokens.spacing.xs },
-  dates: { marginTop: 2 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: tokens.spacing.sm },
+  titleFlex: { flex: 1 },
+  dates: { flexShrink: 0 },
   description: { marginTop: tokens.spacing.xs, color: tokens.colors.textSecondary },
   footer: { marginTop: tokens.spacing.sm, alignItems: 'flex-start' },
 });
