@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import { mockPlaces, PlaceChip, type Place } from '@/features/trips';
 import { useTheme } from '@/shared/theme';
@@ -9,12 +10,16 @@ import { AppText, Screen } from '@/shared/ui';
  * Вкладка «Місця» — повний список місць (раніше лише горизонтальна стрічка на home).
  */
 export default function PlacesScreen() {
+  const router = useRouter();
   const { colors, spacing } = useTheme();
   const [places] = useState<Place[]>(mockPlaces);
 
-  const handleOpenPlace = useCallback((place: Place) => {
-    console.log('TODO: відкрити місце', place.id, place.name);
-  }, []);
+  const handleOpenPlace = useCallback(
+    (place: Place) => {
+      router.push(`/trips/${place.tripId}`);
+    },
+    [router],
+  );
 
   return (
     <Screen style={styles.screen}>

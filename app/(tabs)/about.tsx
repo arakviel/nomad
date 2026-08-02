@@ -98,6 +98,8 @@ export default function AboutScreen() {
             вебі).
           </AppText>
           <Link href="/create-trip" asChild>
+            {/* presentation: modal задано в кореневому Stack */}
+
             <Pressable
               style={[
                 styles.linkBtn,

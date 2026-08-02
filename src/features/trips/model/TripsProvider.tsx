@@ -12,6 +12,8 @@ import type { Trip } from './types';
 
 type TripsContextValue = {
   trips: Trip[];
+  /** Знайти поїздку за id (екран деталей). */
+  getTrip: (id: string) => Trip | undefined;
   /** Додати нову поїздку на початок стрічки (найсвіжіша зверху). */
   addTrip: (trip: Trip) => void;
   /** Mock «оновити з сервера» — повертає seed mockTrips (без локально створених). */
@@ -27,6 +29,11 @@ type TripsProviderProps = {
 export function TripsProvider({ children }: TripsProviderProps) {
   const [trips, setTrips] = useState<Trip[]>(() => [...mockTrips]);
 
+  const getTrip = useCallback(
+    (id: string) => trips.find((t) => t.id === id),
+    [trips],
+  );
+
   const addTrip = useCallback((trip: Trip) => {
     setTrips((prev) => [trip, ...prev]);
   }, []);
@@ -36,8 +43,8 @@ export function TripsProvider({ children }: TripsProviderProps) {
   }, []);
 
   const value = useMemo(
-    () => ({ trips, addTrip, resetToMock }),
-    [trips, addTrip, resetToMock],
+    () => ({ trips, getTrip, addTrip, resetToMock }),
+    [trips, getTrip, addTrip, resetToMock],
   );
 
   return (

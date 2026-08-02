@@ -1,5 +1,6 @@
 export { mockTrips } from './model/mockTrips';
 export { mockPlaces } from './model/mockPlaces';
+export { getPlacesForTrip } from './model/placesHelpers';
 export type { Trip, Place, TripRegion } from './model/types';
 export { TRIP_REGIONS } from './model/types';
 export { TripCard } from './ui/TripCard';

@@ -4,8 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/shared/theme';
 
 /**
- * Нижня панель вкладок (Tabs).
- * Імена name= збігаються з файлами в цій теці (index, places, about).
+ * Нижня панель вкладок.
+ * «Поїздки» — вкладений Stack (список + деталі), не один index-файл.
  */
 export default function TabsLayout() {
   const { colors } = useTheme();
@@ -27,7 +27,7 @@ export default function TabsLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="trips"
         options={{
           title: 'Поїздки',
           tabBarIcon: ({ color, size }) => (
@@ -49,7 +49,11 @@ export default function TabsLayout() {
         options={{
           title: 'Ще',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="ellipsis-horizontal-circle-outline" size={size} color={color} />
+            <Ionicons
+              name="ellipsis-horizontal-circle-outline"
+              size={size}
+              color={color}
+            />
           ),
         }}
       />

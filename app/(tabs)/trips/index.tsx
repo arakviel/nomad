@@ -33,13 +33,20 @@ export default function HomeScreen() {
   const [places] = useState<Place[]>(mockPlaces);
   const [refreshing, setRefreshing] = useState(false);
 
-  const handleOpenTrip = useCallback((trip: Trip) => {
-    console.log('TODO: відкрити поїздку', trip.id, trip.title);
-  }, []);
+  const handleOpenTrip = useCallback(
+    (trip: Trip) => {
+      router.push(`/trips/${trip.id}`);
+    },
+    [router],
+  );
 
-  const handleOpenPlace = useCallback((place: Place) => {
-    console.log('TODO: відкрити місце', place.id, place.name);
-  }, []);
+  const handleOpenPlace = useCallback(
+    (place: Place) => {
+      // Місце належить поїздці — відкриваємо її деталі у вкладеному Stack.
+      router.push(`/trips/${place.tripId}`);
+    },
+    [router],
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
