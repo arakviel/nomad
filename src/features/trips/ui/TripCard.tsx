@@ -45,7 +45,30 @@ function TripCardComponent({ trip, onPress }: TripCardProps) {
         </View>
         <AppText variant="caption" color={colors.primary} style={styles.region}>
           {trip.region}
+          {trip.plannedDays
+            ? ` · ${trip.plannedDays} ${trip.plannedDays === 1 ? 'день' : 'дні'}`
+            : ''}
         </AppText>
+        {(trip.isPrivate || trip.hasItinerary) && (
+          <View style={[styles.badges, { gap: spacing.xs, marginTop: spacing.xs }]}>
+            {trip.isPrivate ? (
+              <AppText
+                variant="caption"
+                style={[styles.badge, { color: colors.textSecondary }]}
+              >
+                приватна
+              </AppText>
+            ) : null}
+            {trip.hasItinerary ? (
+              <AppText
+                variant="caption"
+                style={[styles.badge, { color: colors.primary }]}
+              >
+                є план
+              </AppText>
+            ) : null}
+          </View>
+        )}
         <AppText
           numberOfLines={2}
           style={{ marginTop: spacing.xs, color: colors.textSecondary }}
@@ -102,6 +125,14 @@ const styles = StyleSheet.create({
   },
   region: {
     fontWeight: '600',
+  },
+  badges: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  badge: {
+    fontWeight: '600',
+    fontSize: 12,
   },
   footer: {
     alignItems: 'flex-start',
