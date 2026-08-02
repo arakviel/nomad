@@ -7,12 +7,13 @@ import {
   View,
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
+import { useRouter } from 'expo-router';
 
 import {
   mockPlaces,
-  mockTrips,
   PlaceChip,
   TripCard,
+  useTrips,
   type Place,
   type Trip,
 } from '@/features/trips';
@@ -26,8 +27,9 @@ const PREFS: { id: ThemePreference; label: string }[] = [
 ];
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { trips, resetToMock } = useTrips();
   const { colors, spacing, preference, setPreference, scheme } = useTheme();
-  const [trips, setTrips] = useState<Trip[]>(mockTrips);
   const [places] = useState<Place[]>(mockPlaces);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -41,12 +43,12 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    // Mock pull-to-refresh: «мережа» ще не підключена — імітуємо затримку.
+    // Mock pull-to-refresh: повертаємо seed mock (локально створені зникають).
     setTimeout(() => {
-      setTrips([...mockTrips]);
+      resetToMock();
       setRefreshing(false);
     }, 900);
-  }, []);
+  }, [resetToMock]);
 
   const renderTrip = useCallback(
     ({ item }: { item: Trip }) => (
@@ -57,7 +59,6 @@ export default function HomeScreen() {
 
   const keyExtractor = useCallback((item: Trip) => item.id, []);
 
-  // Шапка списку: місця + підпис секції. Чіпи теми лишаються в sticky header (як у статті 08).
   const listHeader = (
     <View style={{ gap: spacing.md, marginBottom: spacing.md }}>
       {places.length > 0 ? (
@@ -107,7 +108,6 @@ export default function HomeScreen() {
 
   return (
     <Screen style={styles.screen}>
-      {/* Sticky header з 08: бренд + тема + чіпи — не скроляться зі списком */}
       <View
         style={[
           styles.header,
@@ -208,7 +208,7 @@ export default function HomeScreen() {
         <Button
           label="Нова поїздка"
           onPress={() => {
-            console.log('TODO: відкрити створення поїздки');
+            router.push('/create-trip');
           }}
         />
       </View>
