@@ -1,5 +1,6 @@
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Link } from 'expo-router';
+import * as Linking from 'expo-linking';
 
 import { useTheme, type ThemePreference } from '@/shared/theme';
 import { AppText, Screen } from '@/shared/ui';
@@ -115,6 +116,31 @@ export default function AboutScreen() {
               </AppText>
             </Pressable>
           </Link>
+        </View>
+
+        <View
+          style={[
+            styles.card,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              padding: spacing.md,
+              gap: spacing.sm,
+            },
+          ]}
+        >
+          <AppText style={{ fontWeight: '700' }}>Deep link (scheme)</AppText>
+          <AppText variant="caption" color={colors.textSecondary}>
+            У app.json: scheme «nomad». Приклад createURL для поїздки id=1
+            (залежить від Expo Go / standalone):
+          </AppText>
+          <AppText variant="caption" color={colors.primary}>
+            {Linking.createURL('/trips/1')}
+          </AppText>
+          <AppText variant="caption" color={colors.textSecondary}>
+            Тест на білді: nomad://trips/1 (симулятор / adb). Деталі — у
+            статті про deep linking.
+          </AppText>
         </View>
 
         <AppText variant="caption" color={colors.textSecondary}>

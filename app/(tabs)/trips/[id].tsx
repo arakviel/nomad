@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import {
+  Alert,
   Image,
   Platform,
   ScrollView,
@@ -7,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import * as Linking from 'expo-linking';
 
 import {
   getPlacesForTrip,
@@ -35,6 +37,18 @@ export default function TripDetailsScreen() {
   const openCreateModal = useCallback(() => {
     router.push('/create-trip');
   }, [router]);
+
+  const deepLink = tripId
+    ? Linking.createURL(`/trips/${tripId}`)
+    : Linking.createURL('/trips');
+
+  const shareDeepLink = useCallback(async () => {
+    try {
+      await Linking.openURL(deepLink);
+    } catch {
+      Alert.alert('Deep link', deepLink);
+    }
+  }, [deepLink]);
 
   if (!trip) {
     return (
@@ -116,13 +130,31 @@ export default function TripDetailsScreen() {
           )}
 
           <View style={{ gap: spacing.sm, marginTop: spacing.lg }}>
+            <AppText style={{ fontWeight: '700' }}>Deep link</AppText>
+            <AppText variant="caption" color={colors.textSecondary}>
+              Посилання на цей екран (scheme з app.json + path). У Expo Go
+              рядок може бути exp://…; у standalone — nomad://…
+            </AppText>
+            <AppText
+              variant="caption"
+              color={colors.primary}
+              style={styles.linkMono}
+            >
+              {deepLink}
+            </AppText>
+            <Button
+              label="Відкрити це посилання"
+              variant="secondary"
+              onPress={shareDeepLink}
+            />
+
             <Button
               label="Нова поїздка (modal)"
               onPress={openCreateModal}
             />
             <AppText variant="caption" color={colors.textSecondary}>
-              Кнопка відкриває create-trip як modal на кореневому Stack —
-              вкладки ховаються під модалкою.
+              Modal create-trip на кореневому Stack — вкладки ховаються під
+              модалкою.
             </AppText>
           </View>
         </View>
@@ -175,6 +207,9 @@ const styles = StyleSheet.create({
   badges: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+  },
+  linkMono: {
+    fontFamily: Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' }),
   },
   place: {
     borderWidth: 1,
