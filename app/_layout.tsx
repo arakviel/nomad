@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
+import { OfflineBanner } from '@/components/OfflineBanner';
 import { TripsProvider } from '@/features/trips';
 import { ThemeProvider, useTheme } from '@/shared/theme';
 
@@ -9,6 +10,7 @@ import { ThemeProvider, useTheme } from '@/shared/theme';
  * - (tabs) — вкладки (всередині «Поїздки» ще один Stack)
  * - create-trip — modal поверх усього (вкладки ховаються)
  *
+ * OfflineBanner — глобально над навігацією (стаття 14 / NetInfo).
  * initialRouteName: щоб deep link / reload на modal мав куди «спертись».
  */
 export const unstable_settings = {
@@ -21,6 +23,7 @@ function RootNavigator() {
   return (
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <OfflineBanner />
       <Stack
         screenOptions={{
           contentStyle: { backgroundColor: colors.background },

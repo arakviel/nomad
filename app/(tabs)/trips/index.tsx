@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
   RefreshControl,
@@ -28,10 +29,9 @@ const PREFS: { id: ThemePreference; label: string }[] = [
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { trips, resetToMock } = useTrips();
+  const { trips, loading, refreshing, error, refetch } = useTrips();
   const { colors, spacing, preference, setPreference, scheme } = useTheme();
   const [places] = useState<Place[]>(mockPlaces);
-  const [refreshing, setRefreshing] = useState(false);
 
   const handleOpenTrip = useCallback(
     (trip: Trip) => {
@@ -42,20 +42,18 @@ export default function HomeScreen() {
 
   const handleOpenPlace = useCallback(
     (place: Place) => {
-      // Місце належить поїздці — відкриваємо її деталі у вкладеному Stack.
       router.push(`/trips/${place.tripId}`);
     },
     [router],
   );
 
   const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    // Mock pull-to-refresh: повертаємо seed mock (локально створені зникають).
-    setTimeout(() => {
-      resetToMock();
-      setRefreshing(false);
-    }, 900);
-  }, [resetToMock]);
+    void refetch('refresh');
+  }, [refetch]);
+
+  const onRetry = useCallback(() => {
+    void refetch(trips.length === 0 ? 'initial' : 'silent');
+  }, [refetch, trips.length]);
 
   const renderTrip = useCallback(
     ({ item }: { item: Trip }) => (
@@ -68,6 +66,29 @@ export default function HomeScreen() {
 
   const listHeader = (
     <View style={{ gap: spacing.md, marginBottom: spacing.md }}>
+      {error && trips.length > 0 ? (
+        <View
+          style={[
+            styles.inlineError,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+              padding: spacing.sm,
+              gap: spacing.xs,
+            },
+          ]}
+        >
+          <AppText variant="caption" color={colors.textSecondary}>
+            {error.userMessage}
+          </AppText>
+          <Pressable onPress={onRetry} accessibilityRole="button">
+            <AppText variant="caption" color={colors.primary} style={styles.retryLink}>
+              Повторити
+            </AppText>
+          </Pressable>
+        </View>
+      ) : null}
+
       {places.length > 0 ? (
         <View style={{ gap: spacing.sm }}>
           <AppText style={{ fontWeight: '600' }}>Останні місця</AppText>
@@ -108,10 +129,13 @@ export default function HomeScreen() {
         color={colors.textSecondary}
         style={styles.emptyDesc}
       >
-        Потягніть список униз, щоб «оновити», або натисніть «Нова поїздка».
+        Потягніть список униз, щоб оновити з API, або натисніть «Нова поїздка».
       </AppText>
     </View>
   );
+
+  const showFullScreenError = Boolean(error) && trips.length === 0 && !loading;
+  const showFullScreenLoading = loading && trips.length === 0;
 
   return (
     <Screen style={styles.screen}>
@@ -139,9 +163,11 @@ export default function HomeScreen() {
             fontWeight: '600',
           }}
         >
-          {trips.length > 0
-            ? `${trips.length} поїздок · ${places.length} місць`
-            : 'Список порожній'}
+          {loading && trips.length === 0
+            ? 'Завантаження з API…'
+            : trips.length > 0
+              ? `${trips.length} поїздок · ${places.length} місць`
+              : 'Список порожній'}
         </AppText>
 
         <View style={[styles.themeRow, { gap: spacing.sm, marginTop: spacing.sm }]}>
@@ -176,28 +202,62 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.listWrap}>
-        <FlashList
-          data={trips}
-          renderItem={renderTrip}
-          keyExtractor={keyExtractor}
-          ListHeaderComponent={listHeader}
-          ListEmptyComponent={listEmpty}
-          contentContainerStyle={{
-            paddingHorizontal: spacing.md,
-            paddingTop: spacing.md,
-            paddingBottom: spacing.md,
-          }}
-          ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.primary}
-              colors={[colors.primary]}
-            />
-          }
-          showsVerticalScrollIndicator={false}
-        />
+        {showFullScreenLoading ? (
+          <View style={styles.centerState}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <AppText
+              variant="caption"
+              color={colors.textSecondary}
+              style={{ marginTop: spacing.md }}
+            >
+              Завантажуємо поїздки…
+            </AppText>
+          </View>
+        ) : showFullScreenError ? (
+          <View style={[styles.centerState, { paddingHorizontal: spacing.lg, gap: spacing.sm }]}>
+            <AppText variant="subtitle" style={styles.emptyTitle}>
+              Не вдалося завантажити
+            </AppText>
+            <AppText
+              variant="caption"
+              color={colors.textSecondary}
+              style={styles.emptyDesc}
+            >
+              {error?.userMessage}
+            </AppText>
+            <AppText
+              variant="caption"
+              color={colors.textSecondary}
+              style={styles.emptyDesc}
+            >
+              Переконайтесь, що запущено mock API: npm run api
+            </AppText>
+            <Button label="Повторити" onPress={onRetry} style={{ marginTop: spacing.sm }} />
+          </View>
+        ) : (
+          <FlashList
+            data={trips}
+            renderItem={renderTrip}
+            keyExtractor={keyExtractor}
+            ListHeaderComponent={listHeader}
+            ListEmptyComponent={listEmpty}
+            contentContainerStyle={{
+              paddingHorizontal: spacing.md,
+              paddingTop: spacing.md,
+              paddingBottom: spacing.md,
+            }}
+            ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+              />
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        )}
       </View>
 
       <View
@@ -246,6 +306,11 @@ const styles = StyleSheet.create({
   listWrap: {
     flex: 1,
   },
+  centerState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   empty: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -255,6 +320,13 @@ const styles = StyleSheet.create({
   },
   emptyDesc: {
     textAlign: 'center',
+  },
+  inlineError: {
+    borderWidth: 1,
+    borderRadius: 8,
+  },
+  retryLink: {
+    fontWeight: '700',
   },
   footer: {
     borderTopWidth: 1,
